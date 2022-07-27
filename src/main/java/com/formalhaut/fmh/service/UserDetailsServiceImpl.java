@@ -58,19 +58,19 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         }
     }
 
-    @Transactional
-    public UserIssueToken issueToken(String username) throws UsernameNotFoundException {
-        UserEntity entity = userRepository.findByUsername(username);
-
-        final Instant now = Instant.now();
-
-        final String token = createAccessToken(username);
-
-        return UserIssueToken.builder()
-                .accessToken(token)
-                .refreshToken(generateRefreshToken(entity))
-                .build();
-    }
+//    @Transactional
+//    public UserIssueToken issueToken(String username) throws UsernameNotFoundException {
+//        UserEntity entity = userRepository.findByUsername(username);
+//
+//        final Instant now = Instant.now();
+//
+//        final String token = createAccessToken(username);
+//
+//        return UserIssueToken.builder()
+//                .accessToken(token)
+//                .refreshToken(generateRefreshToken(entity))
+//                .build();
+//    }
 
     public String createAccessToken(String username){
         Instant now = Instant.now();
@@ -78,7 +78,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .withSubject(username)
                 .withIssuedAt(Date.from(now))
                 .withExpiresAt(Date.from(now.plus(accessTokenExpTime, ChronoUnit.SECONDS)))
-                .sign(Algorithm.HMAC512(accessTokenSecret.getBytes()));
+                .sign(Algorithm.HMAC256(accessTokenSecret));
     }
 
     public String generateRefreshToken(UserEntity entity) {

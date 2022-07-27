@@ -52,7 +52,6 @@ public class UserController {
         String refreshToken = userEntity.getRefreshToken();
         if(refreshToken == null){
             refreshToken = userDetailsService.generateRefreshToken(userEntity);
-            System.out.println(refreshToken);
         }
 
         HashMap<String, String> map = new HashMap<>();

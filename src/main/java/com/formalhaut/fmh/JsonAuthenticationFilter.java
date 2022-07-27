@@ -9,6 +9,7 @@ import com.formalhaut.fmh.entity.UserEntity;
 import com.formalhaut.fmh.repository.UserRepository;
 import com.formalhaut.fmh.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,6 +27,10 @@ import java.util.Date;
 
 @Component
 public class JsonAuthenticationFilter extends OncePerRequestFilter {
+
+    @Value("${jwt.accesstoken.secretkey}")
+    private String accessTokenSecret;
+
     @Autowired
     UserRepository userRepository;
 
@@ -42,11 +47,10 @@ public class JsonAuthenticationFilter extends OncePerRequestFilter {
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             jwt = authorizationHeader.substring(7);
 
-            JWTVerifier verifier = JWT.require(Algorithm.HMAC256("secret")).build();
+            JWTVerifier verifier = JWT.require(Algorithm.HMAC256(accessTokenSecret)).build();
             DecodedJWT decodedJWT = verifier.verify(jwt);
 
-            String jwt_username = decodedJWT.getClaim("username").toString();
-            username = jwt_username.substring(1, jwt_username.length() - 1);
+            username = decodedJWT.getSubject().toString();
             expired = decodedJWT.getExpiresAt().before(new Date());
         }
         if (username != null && !expired && SecurityContextHolder.getContext().getAuthentication() == null) {

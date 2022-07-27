@@ -24,7 +24,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable().authorizeHttpRequests()
                 .antMatchers("/login").permitAll()
-                .antMatchers("/").authenticated()
+                .antMatchers("/**").authenticated()
                 .anyRequest()
                 .authenticated();
         http.addFilterBefore(jsonAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
