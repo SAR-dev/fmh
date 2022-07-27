@@ -47,10 +47,18 @@ public class UserController {
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) throws Exception {
         authenticate(loginRequest.getUsername(), loginRequest.getPassword());
         UserEntity userEntity = this.userRepository.findByUsername(loginRequest.getUsername());
+
         String accessToken = userDetailsService.createAccessToken(userEntity.getUsername());
+        String refreshToken = userEntity.getRefreshToken();
+        if(refreshToken == null){
+            refreshToken = userDetailsService.generateRefreshToken(userEntity);
+            System.out.println(refreshToken);
+        }
+
         HashMap<String, String> map = new HashMap<>();
         map.put("tokenType", "Bearer");
         map.put("accessToken", accessToken);
+        map.put("refreshToken", refreshToken);
         return ResponseEntity.ok(map);
     }
 

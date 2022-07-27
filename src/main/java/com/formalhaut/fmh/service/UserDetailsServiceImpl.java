@@ -5,6 +5,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.formalhaut.fmh.entity.UserEntity;
 import com.formalhaut.fmh.model.UserIssueToken;
 import com.formalhaut.fmh.repository.UserRepository;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -59,13 +60,15 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Transactional
     public UserIssueToken issueToken(String username) throws UsernameNotFoundException {
+        UserEntity entity = userRepository.findByUsername(username);
+
         final Instant now = Instant.now();
 
         final String token = createAccessToken(username);
 
         return UserIssueToken.builder()
                 .accessToken(token)
-                .refreshToken(generateRefreshToken(username))
+                .refreshToken(generateRefreshToken(entity))
                 .build();
     }
 
@@ -76,6 +79,15 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .withIssuedAt(Date.from(now))
                 .withExpiresAt(Date.from(now.plus(accessTokenExpTime, ChronoUnit.SECONDS)))
                 .sign(Algorithm.HMAC512(accessTokenSecret.getBytes()));
+    }
+
+    public String generateRefreshToken(UserEntity entity) {
+        final String token = RandomStringUtils.randomAlphanumeric(16);;
+        entity.setRefreshToken(passwordEncoder.encode(token));
+        entity.setRefreshTokenIssuedAt(Instant.now());
+        userRepository.updateToken(entity);
+        userRepository.updateTokenIssuedAt(entity);
+        return token;
     }
 
     @Transactional(readOnly = true)
@@ -89,15 +101,5 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         }
 
         return StringUtils.isNotEmpty(entity.getRefreshToken()) && passwordEncoder.matches(refreshToken, entity.getRefreshToken());
-    }
-
-    private String generateRefreshToken(String username) throws UsernameNotFoundException {
-        UserEntity entity = userRepository.findByUsername(username);
-        final String token = UUID.randomUUID().toString();
-        entity.setRefreshToken(passwordEncoder.encode(token));
-        entity.setRefreshTokenIssuedAt(Instant.now());
-        userRepository.updateToken(entity);
-        userRepository.updateTokenIssuedAt(entity);
-        return token;
     }
 }
