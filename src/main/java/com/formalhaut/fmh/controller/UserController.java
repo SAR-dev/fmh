@@ -27,6 +27,10 @@ import java.util.HashMap;
 
 @RestController
 public class UserController {
+
+    @Value("${jwt.accesstoken.secretkey}")
+    private String accessTokenSecret;
+
     @Autowired
     private AuthenticationManager authenticationManager;
 
@@ -61,25 +65,25 @@ public class UserController {
         return ResponseEntity.ok(map);
     }
 
-//    @PostMapping("/refreshToken")
-//    public UserIssueToken refreshToken(@RequestBody UserIssueToken userIssueToken) {
-//        final DecodedJWT jwt = JWT.decode(userIssueToken.getAccessToken());
-//
-//        try {
-//            JWTVerifier verifier = JWT.require(Algorithm.HMAC256("secret")).build();
-//            DecodedJWT decodedJWT = verifier.verify(jwt);
-//        } catch (TokenExpiredException e) {
-//            // allow expired access token for user authentication
-//        } catch (Exception e) {
-//            throw e;
-//        }
-//
-//        if (userDetailsService.verifyRefreshToken(jwt.getSubject(), userIssueToken.getRefreshToken())) {
-//            return userDetailsService.issueToken(jwt.getSubject());
-//        } else {
-//            throw new BadCredentialsException("Invalid refresh token!");
-//        }
-//    }
+    @PostMapping("/refreshToken")
+    public UserIssueToken refreshToken(@RequestBody UserIssueToken userIssueToken) {
+        String jwt = userIssueToken.getAccessToken();
+        JWTVerifier verifier = JWT.require(Algorithm.HMAC256(accessTokenSecret)).build();
+
+        try {
+            DecodedJWT decodedJWT = verifier.verify(jwt);
+        } catch (TokenExpiredException e) {
+            // allow expired access token for user authentication
+        } catch (Exception e) {
+            throw e;
+        }
+
+        if (userDetailsService.verifyRefreshToken(verifier.verify(jwt).getSubject(), userIssueToken.getRefreshToken())) {
+            return userDetailsService.issueToken(verifier.verify(jwt).getSubject());
+        } else {
+            throw new BadCredentialsException("Invalid refresh token!");
+        }
+    }
 
     private void authenticate(String username, String password) throws Exception {
         try {
