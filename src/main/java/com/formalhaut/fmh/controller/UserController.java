@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.Date;
+import java.util.HashMap;
 
 @RestController
 public class UserController {
@@ -43,8 +44,11 @@ public class UserController {
     public ResponseEntity<?> login(@RequestBody Login login) throws Exception {
         authenticate(login.getUsername(), login.getPassword());
         UserEntity userEntity = this.userRepository.findByUsername(login.getUsername());
-        String token = JWT.create().withIssuer("com.formalhaut.fmh").withClaim("username", userEntity.getUsername()).withExpiresAt(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000)).sign(Algorithm.HMAC256("secret"));
-        return ResponseEntity.ok(token);
+        String accessToken = JWT.create().withIssuer("com.formalhaut.fmh").withClaim("username", userEntity.getUsername()).withExpiresAt(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000)).sign(Algorithm.HMAC256("secret"));
+        HashMap<String, String> map = new HashMap<>();
+        map.put("tokenType", "Bearer");
+        map.put("accessToken", accessToken);
+        return ResponseEntity.ok(map);
     }
 
     private void authenticate(String username, String password) throws Exception {
