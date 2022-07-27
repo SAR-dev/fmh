@@ -8,4 +8,7 @@ import org.apache.ibatis.annotations.Select;
 public interface UserRepository {
     @Select("select * from users where username = #{username}")
     UserEntity findByUsername(String username);
+
+    @Select("select * from users where id = #{id}")
+    UserEntity findByUserId(Integer id);
 }

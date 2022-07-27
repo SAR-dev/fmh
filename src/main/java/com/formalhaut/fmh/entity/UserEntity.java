@@ -1,6 +1,6 @@
 package com.formalhaut.fmh.entity;
 
-import com.formalhaut.fmh.model.User;
+import com.formalhaut.fmh.model.UserResponse;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,7 +12,7 @@ public class UserEntity {
     private String password;
     private int coin;
 
-    public User toUser(){
-        return new User(username, coin);
+    public UserResponse toUser(){
+        return new UserResponse(username, coin);
     }
 }
